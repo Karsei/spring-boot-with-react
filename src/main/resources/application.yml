@@ -1,1 +1,9 @@
-
+management:
+  endpoint:
+    health:
+      enabled: true
+      show-details: when_authorized
+  endpoints:
+    web:
+      exposure:
+        include: "*"
