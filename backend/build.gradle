@@ -5,6 +5,8 @@ plugins {
     id 'java'
 }
 
+group = 'kr.pe.karsei'
+version = projectVersion
 sourceCompatibility = '13'
 
 jar {
