@@ -1,6 +1,12 @@
 import { useState } from 'react'
+import axios from 'axios';
 import logo from './logo.svg'
 import './App.css'
+
+// Call Method Test
+function axiosCallTest() {
+  axios.get('http://localhost:8080/api/hello').then(r => console.log(r));
+}
 
 function App() {
   const [count, setCount] = useState(0)
@@ -13,6 +19,11 @@ function App() {
         <p>
           <button type="button" onClick={() => setCount((count) => count + 1)}>
             count is: {count}
+          </button>
+        </p>
+        <p>
+          <button type="button" onClick={() => axiosCallTest()}>
+            call api
           </button>
         </p>
         <p>
