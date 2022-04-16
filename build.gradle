@@ -1,102 +1,40 @@
-plugins {
-    id 'org.springframework.boot' version '2.6.6'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-    id 'org.asciidoctor.convert' version '1.5.8'
-    id 'java'
-}
-
-group = 'kr.pe.karsei'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '13'
-
-repositories {
-    mavenCentral()
-}
-
-ext {
-    set('frontendDir', "$projectDir/frontend")
-    set('snippetsDir', file("build/generated-snippets"))
-    set('springCloudVersion', "2021.0.1")
-}
-
-dependencies {
-    // Lombok
-    compileOnly 'org.projectlombok:lombok'
-
-    // Spring
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-hateoas'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
-
-    // Database
-    runtimeOnly 'com.h2database:h2'
-    runtimeOnly 'mysql:mysql-connector-java'
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+buildscript {
+    ext {
+        set("projectVersion", "0.0.1-SNAPSHOT")
+        set("springBootVersion", "2.6.6")
+        set("springCloudVersion", "2021.0.1")
+        set("springDependencyVersion", "1.0.11.RELEASE")
+        set("frontendDir", "$projectDir/frontend")
+    }
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    dependencies {
+        classpath "io.spring.gradle:dependency-management-plugin:${springDependencyVersion}"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+        classpath "io.freefair.gradle:lombok-plugin:6.4.2"
+        classpath "io.freefair.gradle:maven-plugin:6.4.2"
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
+allprojects {}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    group = 'kr.pe.karsei'
+    version = projectVersion
+    sourceCompatibility = '13'
+
+    repositories {
+        mavenCentral()
     }
-}
 
-tasks.named('test') {
-    outputs.dir snippetsDir
-    useJUnitPlatform()
-}
-
-tasks.named('asciidoctor') {
-    inputs.dir snippetsDir
-    dependsOn test
-}
-
-sourceSets {
-    main {
-        resources {
-            srcDirs = ["$projectDir/src/main/resources"]
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
         }
     }
-}
-
-task installReact(type: Exec) {
-    workingDir "$frontendDir"
-    inputs.dir "$frontendDir"
-    group = BasePlugin.BUILD_GROUP
-    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-        commandLine "npm.cmd", "audit", "fix" commandLine 'npm.cmd', 'install'
-    } else {
-        commandLine "npm", "audit", "fix" commandLine 'npm', 'install'
-    }
-}
-
-task buildReact(type: Exec) {
-    dependsOn "installReact"
-    workingDir "$frontendDir"
-    inputs.dir "$frontendDir"
-    group = BasePlugin.BUILD_GROUP
-    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-        commandLine "npm.cmd", "run-script", "build"
-    } else {
-        commandLine "npm", "run-script", "build"
-    }
-}
-
-task copyReactBuildFiles(type: Copy) {
-    dependsOn "buildReact"
-    from "$frontendDir/dist" into "$projectDir/src/main/resources/static"
-}
-
-processResources {
-    dependsOn "copyReactBuildFiles"
 }

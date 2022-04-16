@@ -37,4 +37,4 @@ out/
 .vscode/
 
 # 정적 파일 제외
-/src/main/resources/static/
+/backend/src/main/resources/static/
