@@ -5,7 +5,12 @@ plugins {
     id 'java'
 }
 
-jar.enabled(true)
+sourceCompatibility = '13'
+
+jar {
+    enabled(false)
+    archiveClassifier.set("")
+}
 bootJar {
     dependsOn asciidoctor
 
@@ -13,8 +18,14 @@ bootJar {
     archiveFileName = 'app.jar'
 }
 
-ext {
-    set('snippetsDir', file("build/generated-snippets"))
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 dependencies {
@@ -30,6 +41,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-asciidoctor'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 
     // Database
@@ -37,9 +49,25 @@ dependencies {
     runtimeOnly 'mysql:mysql-connector-java'
 }
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+test {
+    useJUnitPlatform()
+    reports {
+        junitXml.enabled(true)
+        html.enabled(true)
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs = ["$projectDir/src/main/resources"]
+        }
     }
 }
 
@@ -47,18 +75,10 @@ ext {
     set('snippetsDir', file("build/generated-snippets"))
 }
 
-configurations {
-    asciidoctorExt
-}
-
-tasks.named('test') {
-    outputs.dir snippetsDir
-    useJUnitPlatform()
-}
-
 tasks.named('asciidoctor') {
-    inputs.dir snippetsDir
     dependsOn test
+    attributes 'source-highlighter': 'coderay'
+    inputs.dir snippetsDir
 }
 
 task installReact(type: Exec) {
@@ -89,14 +109,19 @@ task copyReactBuildFiles(type: Copy) {
     from "$frontendDir/dist" into "$projectDir/src/main/resources/static"
 }
 
+task copyJars(type: Copy) {
+    from file("build/libs")
+    into file("$rootDir/build/libs")
+}
+
 processResources {
     dependsOn "copyReactBuildFiles"
 }
 
-sourceSets {
-    main {
-        resources {
-            srcDirs = ["$projectDir/src/main/resources"]
-        }
-    }
+build {
+    finalizedBy([
+            copyJars
+    ])
 }
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'

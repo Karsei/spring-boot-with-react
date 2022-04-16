@@ -20,21 +20,6 @@ buildscript {
 allprojects {}
 
 subprojects {
-    apply plugin: 'java'
-    apply plugin: 'org.springframework.boot'
-    apply plugin: 'io.spring.dependency-management'
-
     group = 'kr.pe.karsei'
     version = projectVersion
-    sourceCompatibility = '13'
-
-    repositories {
-        mavenCentral()
-    }
-
-    dependencyManagement {
-        imports {
-            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-        }
-    }
 }
